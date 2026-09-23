@@ -25,7 +25,7 @@ export const patient = {
   period: 'May 2022 – February 2023',
   startDate: '2022-05-26',
   endDate: '2023-02-21',
-  provenance: 'Manually curated from an existing timeline. This is not a verified original EHR, an Epic/CareConnect export, or a synthetic patient record.',
+  provenance: 'Manually compiled clinical summaries from an existing timeline. Not a verified EHR export or a complete medical chart. No live Epic / CareConnect connection.',
 };
 
 export const categoryMeta: Record<Category, {label: string; color: string}> = {
