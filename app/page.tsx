@@ -6,7 +6,9 @@ import { categoryMeta, events, medications, patient, type Category, type Medicat
 const categories = Object.keys(categoryMeta) as Category[];
 const chronologicalEvents = [...events].sort((a, b) => a.date.localeCompare(b.date));
 const DAY = 86_400_000;
-const CARD_WIDTH = 180;
+const CARD_WIDTH = 260;
+const CARD_HEIGHT = 132;
+const CARD_ROW_STEP = 152;
 const BASE_WIDTH = 6200;
 const startTime = stamp(patient.startDate);
 const endTime = stamp(patient.endDate);
@@ -60,11 +62,11 @@ function layoutCards(items: TimelineEvent[], width: number) {
     ends[lane] = left + CARD_WIDTH;
     return { ...group, id: group.items[0].id, left, lane, color: group.items.length === 1 ? categoryMeta[group.items[0].category].color : "#a6bfc9" };
   });
-  const rowsAbove = Math.max(3, Math.ceil(ends.length / 2));
-  const rowsBelow = Math.max(3, Math.floor(ends.length / 2));
-  const axis = rowsAbove * 100 + 26;
-  const height = axis + rowsBelow * 100 + 30;
-  const cards: Card[] = packed.map((card) => ({ ...card, top: card.lane % 2 === 0 ? 18 + Math.floor(card.lane / 2) * 100 : axis + 20 + Math.floor(card.lane / 2) * 100 }));
+  const rowsAbove = Math.max(1, Math.ceil(ends.length / 2));
+  const rowsBelow = Math.max(1, Math.floor(ends.length / 2));
+  const axis = rowsAbove * CARD_ROW_STEP + 32;
+  const height = axis + rowsBelow * CARD_ROW_STEP + 32;
+  const cards: Card[] = packed.map((card) => ({ ...card, top: card.lane % 2 === 0 ? 20 + Math.floor(card.lane / 2) * CARD_ROW_STEP : axis + 24 + Math.floor(card.lane / 2) * CARD_ROW_STEP }));
   return { cards, axis, height };
 }
 
@@ -73,13 +75,17 @@ function medicationLayout(medication: Medication, width: number) {
   const segments = medication.segments.map((segment, index) => ({ segment, index, left: position(segment.start, width), right: position(segment.end ?? segment.start, width) }))
     .sort((a, b) => a.left - b.left || a.index - b.index)
     .map((item) => {
-      const right = Math.max(item.left + 20, item.right);
-      let lane = laneEnds.findIndex((end) => end + 5 <= item.left);
+      // Labels remain readable even for a single date. The separate rail shows
+      // the actual interval; the label width never represents treatment duration.
+      const labelWidth = Math.min(250, Math.max(116, item.segment.label.length * 8.5 + 28));
+      const labelLeft = Math.max(12, Math.min(item.left, width - labelWidth - 12));
+      const right = Math.max(labelLeft + labelWidth, item.right);
+      let lane = laneEnds.findIndex((end) => end + 12 <= Math.min(labelLeft, item.left));
       if (lane === -1) lane = laneEnds.length;
       laneEnds[lane] = right;
-      return { ...item, width: right - item.left, top: 12 + lane * 29 };
+      return { ...item, labelLeft, labelWidth, top: 12 + lane * 54 };
     });
-  return { segments, height: Math.max(54, laneEnds.length * 29 + 20) };
+  return { segments, height: Math.max(74, laneEnds.length * 54 + 20) };
 }
 
 function CategoryDot({ category }: { category: Category }) {
@@ -196,16 +202,27 @@ export default function Home() {
                 const cluster = card.items.length > 1;
                 const datesDiffer = first.date.slice(0, 10) !== last.date.slice(0, 10);
                 const topSide = card.top < layout.axis;
-                const connectorTop = topSide ? card.top + 88 : layout.axis + 2;
-                return <div className="event-anchor" key={card.id} style={colorStyle(card.color)}><div className="connector" style={{ left: card.x, top: connectorTop, height: topSide ? layout.axis - connectorTop : card.top - connectorTop }} /><i className="axis-dot" style={{ left: card.x, top: layout.axis }} /><button className={`event-card ${cluster ? "cluster-card" : ""}`} style={{ left: card.left, top: card.top }} aria-label={cluster ? `${card.items.length} entries, ${first.displayDate}${datesDiffer ? ` through ${last.displayDate}` : ""}` : `${first.displayDate}: ${first.title}`} onClick={() => cluster ? setSelection({ kind: "cluster", items: card.items }) : selectEvent(first)}><span className="card-date">{cluster ? `${formatDate(first.date, { month: "short", day: "numeric" })}${datesDiffer ? ` – ${formatDate(last.date, { month: "short", day: "numeric" })}` : ""}` : first.displayDate}</span><strong>{cluster ? `${card.items.length} clinical entries` : first.title}</strong>{cluster ? <span className="cluster-kinds">{[...new Set(card.items.map((item) => item.category))].map((category) => <CategoryDot category={category} key={category} />)}<span>Open entries <b aria-hidden="true">↗</b></span></span> : <span className="card-category">{categoryMeta[first.category].label}</span>}</button></div>;
+                const connectorTop = topSide ? card.top + CARD_HEIGHT : layout.axis + 2;
+                return <div className="event-anchor" key={card.id} style={colorStyle(card.color)}><div className="connector" style={{ left: card.x, top: connectorTop, height: topSide ? layout.axis - connectorTop : card.top - connectorTop }} /><i className="axis-dot" style={{ left: card.x, top: layout.axis }} /><button className={`event-card ${cluster ? "cluster-card" : ""}`} style={{ left: card.left, top: card.top, width: CARD_WIDTH, height: CARD_HEIGHT }} aria-label={cluster ? `${card.items.length} entries, ${first.displayDate}${datesDiffer ? ` through ${last.displayDate}` : ""}` : `${first.displayDate}: ${first.title}`} onClick={() => cluster ? setSelection({ kind: "cluster", items: card.items }) : selectEvent(first)}><span className="card-date">{cluster ? `${formatDate(first.date, { month: "short", day: "numeric" })}${datesDiffer ? ` – ${formatDate(last.date, { month: "short", day: "numeric" })}` : ""}` : first.displayDate}</span><strong>{cluster ? `${card.items.length} clinical entries` : first.title}</strong>{cluster ? <span className="cluster-kinds">{[...new Set(card.items.map((item) => item.category))].map((category) => <CategoryDot category={category} key={category} />)}<span>Open entries <b aria-hidden="true">↗</b></span></span> : <span className="card-category">{categoryMeta[first.category].label}</span>}</button></div>;
               })}
               {!filteredEvents.length && <div className="empty-state" style={{ left: scrollLeft + viewportWidth / 2 }}><strong>No entries match these filters.</strong><span>Try another search or entry type.</span><button className="text-button" onClick={resetFilters}>Reset filters</button></div>}
             </div>
             {showMedications && <section className="medication-field" aria-label="Medication history"><div className="medication-heading" style={{ width: viewportWidth }}><div><p className="eyebrow">Treatment context</p><h3>Medication history</h3></div><span>Selected date ranges · open a segment for details</span></div>
               <div className="medication-legend" style={{ width: viewportWidth }}><span><i className="prescribed" />Prescribed / filled</span><span><i className="reported" />Reported use</span><span><i className="planned" />Planned</span><span><i className="inpatient" />Inpatient</span></div>
-              {filteredMedications.map((medication) => { const packed = medicationLayout(medication, canvasWidth); return <div className="medication-row" style={{ height: packed.height, ...colorStyle(medication.color) }} key={medication.name}><button className="medication-name" onClick={() => setSelection({ kind: "medication", medication })}><strong>{medication.name}</strong><span>{medication.generic}</span></button>{packed.segments.map(({ segment, index, left, width, top }) => <button className={`medication-segment ${segment.status}`} key={index} style={{ left, width, top }} aria-label={`${medication.name}, ${segment.label}, ${segment.status}, ${formatDate(segment.start)}${segment.end ? ` through ${formatDate(segment.end)}` : ""}`} title={`${medication.name} · ${segment.label} · ${segment.status}`} onClick={() => setSelection({ kind: "medication", medication, segmentIndex: index })}>{width > 75 ? segment.label : <span className="segment-dot" aria-hidden="true" />}</button>)}</div>; })}
+              {filteredMedications.map((medication) => {
+                const packed = medicationLayout(medication, canvasWidth);
+                const stacked = fit && canvasWidth < 700;
+                const headerHeight = stacked ? 56 : 0;
+                return <div className={`medication-row ${stacked ? "stacked" : ""}`} style={{ height: packed.height + headerHeight, ...colorStyle(medication.color) }} key={medication.name}>
+                  <button className="medication-name" onClick={() => setSelection({ kind: "medication", medication })}><strong>{medication.name}</strong><span>{medication.generic}</span></button>
+                  {packed.segments.map(({ segment, index, left, right, labelLeft, labelWidth, top }) => <span key={index}>
+                    <span aria-hidden="true" className={`${segment.end ? "medication-duration" : "medication-point"} ${segment.status}`} style={{ left, width: segment.end ? Math.max(0, right - left) : 7, top: top + headerHeight + 42 }} />
+                    <button className={`medication-segment ${segment.status}`} style={{ left: labelLeft, width: labelWidth, top: top + headerHeight }} aria-label={`${medication.name}, ${segment.label}, ${segment.status}, ${formatDate(segment.start)}${segment.end ? ` through ${formatDate(segment.end)}` : ""}`} title={`${medication.name} · ${segment.label} · ${segment.status}`} onClick={() => setSelection({ kind: "medication", medication, segmentIndex: index })}>{segment.label}</button>
+                  </span>)}
+                </div>;
+              })}
               {!filteredMedications.length && <p className="medication-empty" style={{ width: viewportWidth }}>No medication names or notes match this search.</p>}
-              <p className="medication-footnote" style={{ width: viewportWidth }}>A prescription or treatment plan does not confirm use. Bar lengths follow the curated date ranges; open each segment to see its status and any uncertainty.</p>
+              <p className="medication-footnote" style={{ width: viewportWidth }}>Dose labels are sized for readability. The line or point beneath each label marks its date range. A prescription or treatment plan does not confirm use; open a label for details.</p>
             </section>}
           </div>
         </div>
