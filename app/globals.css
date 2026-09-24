@@ -96,6 +96,12 @@ h1, h2, h3, p { margin-top: 0; }
 .month-navigation > span { color: #5b7280; font-size: 14px; margin-right: 6px; white-space: nowrap; }
 .month-navigation button { min-height: 44px; color: #4b6878; padding: 8px 12px; background: transparent; border: 0; border-radius: 7px; font-size: 15px; white-space: nowrap; }
 .month-navigation button:hover { background: #edf4f6; color: #176e77; }
+.timeline-stage { position: relative; }
+.timeline-scroll-coach { position: absolute; z-index: 10; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100% - 24px); padding: 12px 18px; border: 1px solid #bed8d8; border-radius: 10px; background: #f4fbfa; color: #28595e; box-shadow: 0 4px 16px #264d601a; font-size: 15px; line-height: 1.5; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease, visibility 0s .4s; }
+.timeline-scroll-coach.visible { opacity: 1; visibility: visible; transition-delay: 0s; }
+.timeline-scroll-coach > span:first-child { font-size: 22px; }
+.timeline-scroll-coach kbd { font: inherit; font-weight: 650; }
+@media (hover: none) and (pointer: coarse) { .timeline-scroll-coach { display: none; } }
 .timeline-scroll { overflow: auto; max-width: 100%; scrollbar-color: #a3bac5 #edf3f6; scrollbar-width: thin; overscroll-behavior-inline: contain; outline: none; background: #f7fafc; }
 .timeline-scroll:focus-visible { box-shadow: inset 0 0 0 3px #269ca3; }
 .timeline-canvas { position: relative; min-width: 100%; }
