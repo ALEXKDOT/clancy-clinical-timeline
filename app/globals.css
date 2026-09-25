@@ -99,8 +99,15 @@ h1, h2, h3, p { margin-top: 0; }
 .timeline-stage { position: relative; }
 .timeline-scroll-coach { position: absolute; z-index: 10; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100% - 24px); padding: 12px 18px; border: 1px solid #bed8d8; border-radius: 10px; background: #f4fbfa; color: #28595e; box-shadow: 0 4px 16px #264d601a; font-size: 15px; line-height: 1.5; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease, visibility 0s .4s; }
 .timeline-scroll-coach.visible { opacity: 1; visibility: visible; transition-delay: 0s; }
-.timeline-scroll-coach > span:first-child { font-size: 22px; }
-.timeline-scroll-coach kbd { font: inherit; font-weight: 650; }
+.scroll-coach-visual { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.timeline-scroll-coach kbd { display: grid; place-items: center; min-width: 56px; height: 36px; padding: 0 10px; border: 1px solid #9dbcbc; border-bottom-width: 3px; border-radius: 7px; background: #fff; font: inherit; font-weight: 650; }
+.scroll-coach-mouse { position: relative; display: block; width: 27px; height: 39px; border: 2px solid #5c8588; border-radius: 14px; }
+.scroll-coach-mouse b { position: absolute; top: 7px; left: 50%; width: 4px; height: 8px; border-radius: 3px; background: #367a7e; transform: translateX(-50%); }
+.timeline-scroll-coach.visible .scroll-coach-mouse b { animation: scroll-coach-wheel 1.4s ease-in-out infinite; }
+@keyframes scroll-coach-wheel { 0%, 100% { transform: translate(-50%, 0); opacity: .55; } 50% { transform: translate(-50%, 7px); opacity: 1; } }
+.scroll-coach-copy strong, .scroll-coach-copy span { display: block; }
+.scroll-coach-copy strong { font-size: 16px; font-weight: 650; }
+.scroll-coach-copy span { color: #4b6c70; }
 @media (hover: none) and (pointer: coarse) { .timeline-scroll-coach { display: none; } }
 .timeline-scroll { overflow: auto; max-width: 100%; scrollbar-color: #a3bac5 #edf3f6; scrollbar-width: thin; overscroll-behavior-inline: contain; outline: none; background: #f7fafc; }
 .timeline-scroll:focus-visible { box-shadow: inset 0 0 0 3px #269ca3; }
@@ -330,4 +337,5 @@ h1, h2, h3, p { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; }
+  .timeline-scroll-coach.visible .scroll-coach-mouse b { animation: none; }
 }

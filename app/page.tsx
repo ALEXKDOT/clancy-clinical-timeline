@@ -104,7 +104,6 @@ export default function Home() {
   const [showScrollHint, setShowScrollHint] = useState(true);
   const [selection, setSelection] = useState<Selection | null>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const scrollHintRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const pendingCenter = useRef<number | null>(null);
   const query = search.trim().toLowerCase();
@@ -118,19 +117,6 @@ export default function Home() {
   const dialogOpen = selection !== null;
   const maxScroll = Math.max(0, canvasWidth - viewportWidth);
   const scrollHintVisible = showScrollHint && maxScroll > 0;
-
-  useEffect(() => {
-    const element = scrollHintRef.current;
-    if (view !== "timeline" || !scrollHintVisible || !element) return;
-    let timer: number | undefined;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      timer = window.setTimeout(() => setShowScrollHint(false), 6000);
-      observer.disconnect();
-    }, { threshold: .75 });
-    observer.observe(element);
-    return () => { observer.disconnect(); window.clearTimeout(timer); };
-  }, [view, scrollHintVisible]);
 
   useEffect(() => {
     const element = viewportRef.current;
@@ -207,7 +193,10 @@ export default function Home() {
       {view === "timeline" ? <>
         <nav className="month-navigation" aria-label="Jump to month"><span>Jump to</span><button onClick={() => centerDate(startTime)}>{formatDate(startTime, { month: "short", year: "numeric" })}</button>{months.map((month) => <button key={month.time} onClick={() => centerDate(month.time)}>{month.short}{month.short === "Jan" ? " 2023" : ""}</button>)}<small className="calendar-note">June–August spacing is compressed</small></nav>
         <div className="timeline-stage">
-          <div ref={scrollHintRef} className={`timeline-scroll-coach ${scrollHintVisible ? "visible" : ""}`} aria-hidden={!scrollHintVisible}><span aria-hidden="true">↔</span><span><kbd>Shift</kbd> + scroll to move through the timeline</span></div>
+          <div className={`timeline-scroll-coach ${scrollHintVisible ? "visible" : ""}`} aria-hidden={!scrollHintVisible}>
+            <div className="scroll-coach-visual" aria-hidden="true"><kbd>Shift</kbd><span>+</span><i className="scroll-coach-mouse"><b /></i></div>
+            <div className="scroll-coach-copy"><strong>Move through the timeline</strong><span>Hold Shift while scrolling</span></div>
+          </div>
         <div className="timeline-scroll" ref={viewportRef} tabIndex={0} role="region" aria-label="Scrollable clinical timeline. Hold Shift while scrolling, or use left and right arrow keys." onScroll={(event) => { const left = event.currentTarget.scrollLeft; if (left !== scrollLeft) setShowScrollHint(false); setScrollLeft(left); }} onKeyDown={(event) => { if (event.target !== event.currentTarget) return; if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); event.currentTarget.scrollBy({ left: event.key === "ArrowRight" ? 320 : -320 }); } if (event.key === "Home" || event.key === "End") { event.preventDefault(); event.currentTarget.scrollTo({ left: event.key === "Home" ? 0 : canvasWidth }); } }}>
           <div className="timeline-canvas" style={{ width: canvasWidth }}>
             <div className="time-ruler"><span className="range-start">{formatDate(startTime, { month: "short", day: "numeric" })}</span>{months.filter((month) => (month.time <= gapStart || month.time >= gapEnd) && (!fit || canvasWidth > 900 || [8, 10, 0].includes(new Date(month.time).getUTCMonth()))).map((month) => <div className="tick" key={month.time} style={{ left: position(month.time, canvasWidth) }}><span>{fit ? month.short : month.label}</span></div>)}<span className="range-end">{formatDate(endTime, { month: "short", day: "numeric" })}</span></div>
