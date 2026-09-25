@@ -175,7 +175,7 @@ export default function Home() {
       <dl className="patient-stats"><div><dt>Clinical entries</dt><dd>{events.length}</dd></div><div><dt>Messages</dt><dd>{events.filter((event) => event.category === "message").length}</dd></div><div><dt>Medications</dt><dd>{medications.length}</dd></div></dl>
     </section>
 
-    <div className="prototype-note"><span className="note-symbol" aria-hidden="true">i</span><p><strong>Why this case.</strong> The widely publicized Lindsay Clancy case offers unusually detailed public documentation of care. It illustrates how a unified timeline could help residents review treatment changes, care transitions, and fragmentation across clinicians and settings.</p></div>
+    <div className="prototype-note"><span className="note-symbol" aria-hidden="true">i</span><p><strong>Why this case.</strong> The widely publicized Lindsay Clancy case offers unusually detailed public documentation of care. It illustrates how a unified timeline could clarify treatment changes, care transitions, and fragmentation across clinicians and settings.</p></div>
 
     <section id="timeline-workspace" className="workspace" aria-label="Clinical records">
       <div className="control-deck">
